@@ -2,11 +2,11 @@
 Description=Ansible Pull Configuration
 After=network-online.target
 Wants=network-online.target
-# S'exécute avant qu'overlayroot gèle le système
 Before=overlayroot.service
 
 [Service]
 Type=oneshot
+ExecStartPre=/bin/bash -c 'for i in $(seq 1 12); do ping -c1 github.com &>/dev/null && exit 0; sleep 5; done; exit 1'
 ExecStart=/usr/bin/ansible-pull -U https://github.com/ton-org/ton-repo.git \
           -C main \
           --accept-host-key \
@@ -15,6 +15,12 @@ ExecStart=/usr/bin/ansible-pull -U https://github.com/ton-org/ton-repo.git \
 StandardOutput=append:/var/log/ansible-pull.log
 StandardError=append:/var/log/ansible-pull.log
 RemainAfterExit=yes
+
+[Service]
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=120
+StartLimitBurst=5
 
 [Install]
 WantedBy=multi-user.target
