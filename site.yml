@@ -1,0 +1,43 @@
+---
+- name: Configuration des postes
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+
+    - name: Mise à jour de la liste des paquets
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Mise à jour du système
+      apt:
+        upgrade: dist
+        autoremove: yes
+
+    - name: Ajout de la clé GPG NodeSource
+      apt_key:
+        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+        state: present
+
+    - name: Ajout du dépôt NodeSource (Node.js 20 LTS)
+      apt_repository:
+        repo: "deb https://deb.nodesource.com/node_20.x nodistro main"
+        state: present
+        filename: nodesource
+
+    - name: Installation de Node.js
+      apt:
+        name: nodejs
+        state: present
+        update_cache: yes
+
+    - name: Vérification de la version Node.js
+      command: node --version
+      register: node_version
+      changed_when: false
+
+    - name: Affichage de la version Node.js
+      debug:
+        msg: "Node.js installé : {{ node_version.stdout }}"
